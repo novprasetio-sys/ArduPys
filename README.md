@@ -59,3 +59,17 @@ ani = FuncAnimation(fig, update, interval=200)
 plt.title("ArduPys Lite - MQ2 Real-time Plot")
 plt.xlabel("Sample")
 plt.ylabel("MQ2 Value")
+
+
+
+// Arduino Codes
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int mq = analogRead(A0);     // baca MQ-2 (0–1023 untuk Arduino)
+  Serial.println(mq);          // kirim ke PC via serial
+  delay(200);                  // 5 sampel per detik
+}

@@ -11,7 +11,7 @@ di lingkungan industri kecil maupun prototyping cepat.
 ## 📁 File Project
 
 ### 1. mq2.txt  
-Kode MicroPython untuk membaca sensor gas MQ-2 dan mengirim nilai analog.
+Kode Arduino untuk membaca sensor gas MQ-2 dan mengirim nilai analog.
 
 ### 2. py thingspeak.txt  
 Script Python untuk mengirim data sensor ke Thingspeak dan menampilkan grafik.

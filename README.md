@@ -128,6 +128,6 @@ while True:
         last_upload = time.time()
 
 
-# link vidio dekonsentrasi
+# link vidio demo
 
 https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf

@@ -1,32 +1,39 @@
 # ArduPys – Microcontroller Monitoring & Control Platform  
-Lightweight • Functional • Industrial-Ready
+*Lightweight • Functional • Industrial-Ready*
 
 ArduPys adalah platform pengembangan microcontroller (Arduino / ESP32)  
 yang terintegrasi dengan Python untuk monitoring dan kontrol industri ringan.
 
-Repositori ini berisi integrasi **sensor MQ-2 → Arduino → Python → Matplotlib → Thingspeak**.
+Repositori ini berisi integrasi:  
+**Sensor MQ-2 → Arduino → Python → Matplotlib → Thingspeak**
 
 ---
 
 ## 📦 Isi Project
 
 ### `arduino/mq2_monitor.ino`
-- Membaca nilai analog dari sensor MQ-2
-- Mengirim data ke PC melalui Serial (9600 baud)
-- Format data: angka murni, tanpa teks tambahan
+- Membaca nilai analog dari sensor MQ-2  
+- Mengirim data ke PC melalui Serial (9600 baud)  
+- Format data: angka murni, tanpa teks tambahan  
 
 ### `python/ardupys_gateway.py`
-- Membaca nilai sensor dari Serial (PySerial)
-- Menampilkan grafik real-time menggunakan Matplotlib
-- Mengirim data ke Thingspeak setiap 15 detik
+- Membaca nilai sensor dari Serial (PySerial)  
+- Menampilkan grafik real-time menggunakan Matplotlib  
+- Mengirim data ke Thingspeak setiap 15 detik  
 
 ### `docs/`
-- Dokumentasi wiring
-- Foto rangkaian atau hasil pengujian
+- Dokumentasi wiring  
+- Foto rangkaian atau hasil pengujian  
 
 ---
 
 ## 🔌 Arsitektur Sistem
+
+| Komponen         | Fungsi / Keterangan |
+|-----------------|-------------------|
+| Arduino / ESP32  | Membaca sensor MQ-2 dan kirim data Serial |
+| Python Gateway   | Menerima data Serial, plot grafik realtime |
+| Thingspeak       | Menyimpan data dan menampilkan chart online |
 
 ---
 
@@ -36,24 +43,13 @@ Repositori ini berisi integrasi **sensor MQ-2 → Arduino → Python → Matplot
 Upload `mq2_monitor.ino` ke board (UNO / Nano / ESP32).
 
 ### 2. Python
-Install dependency:
+Install dependency:  
 
-Jalankan gateway:
+```bash
+pip install pyserial requests matplotlib
 
----
 
-## 🚀 Roadmap
-- Integrasi GUI Star-Delta
-- ArduPys CAM (Digital Meter Recognition)
-- Monitoring arus AC
-- Dashboard Realtime berbasis Tkinter/Qt
-
----
-
-## 🎥 Demo
-YouTube: https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf
-
-// Arduino Codes C
+// Arduino C code — mq2_monitor.ino
 
 const int MQ2_PIN = A0;
 
@@ -67,8 +63,7 @@ void loop() {
   delay(200);
 }
 
-
-# Python Code Gateway & Matplotlib
+# Python code — ardupys_gateway.py
 
 import serial
 import time
@@ -106,7 +101,6 @@ def upload(value):
 
 while True:
     raw = ser.readline().decode().strip()
-
     if raw == "":
         continue
 
@@ -134,8 +128,6 @@ while True:
         last_upload = time.time()
 
 
-## library python yg dibutuhkan
+# link vidio dekonsentrasi
 
-pyserial
-requests
-matplotlib
+https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf

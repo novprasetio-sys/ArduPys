@@ -1,1 +1,106 @@
 
+# main.py
+
+import network
+import urequests
+import dht
+import time
+
+# Inisialisasi pin
+dht_pin = 2
+dht_sensor = dht.DHT11(machine.Pin(dht_pin))
+
+# Inisialisasi WiFi
+wifi = network.WLAN(network.STA_IF)
+wifi.active(True)
+wifi.connect('SSID', 'PASSWORD')
+
+# Inisialisasi Thingspeak
+thingspeak_api_key = 'YOUR_API_KEY'
+thingspeak_url = 'https://api.thingspeak.com/update?api_key=' + thingspeak_api_key
+
+while True:
+    try:
+        # Baca data DHT11
+        dht_sensor.measure()
+        temperature = dht_sensor.temperature()
+        humidity = dht_sensor.humidity()
+        
+        # Kirim data ke Thingspeak
+        url = thingspeak_url + '&field1=' + str(temperature) + '&field2=' + str(humidity)
+        urequests.get(url)
+        
+        print('Temperature:', temperature, 'C')
+        print('Humidity:', humidity, '%')
+    except Exception as e:
+        print('Error:', e)
+    time.sleep(15)
+
+# dht.py
+
+import machine
+import time
+
+class DHT:
+    def __init__(self, pin):
+        self.pin = machine.Pin(pin, machine.Pin.OUT)
+        self.pin.value(1)
+
+    def measure(self):
+        # Kirim sinyal start
+        self.pin.value(0)
+        time.sleep_ms(18)
+        self.pin.value(1)
+        time.sleep_us(40)
+
+        # Baca data
+        self.pin.init(machine.Pin.IN)
+        data = []
+        for i in range(40):
+            while self.pin.value() == 1:
+                pass
+            time.sleep_us(50)
+            if self.pin.value() == 1:
+                data.append(1)
+            else:
+                data.append(0)
+            while self.pin.value() == 0:
+                pass
+
+        # Konversi data
+        humidity = 0
+        temperature = 0
+        for i in range(8):
+            humidity = (humidity << 1) | data[i]
+        for i in range(8, 16):
+            temperature = (temperature << 1) | data[i]
+        for i in range(16, 24):
+            humidity = (humidity << 1) | data[i]
+        for i in range(24, 32):
+            temperature = (temperature << 1) | data[i]
+        checksum = 0
+        for i in range(32, 40):
+            checksum = (checksum << 1) | data[i]
+
+        # Cek checksum
+        if (humidity + temperature) & 0xFF != checksum:
+            raise Exception('Checksum error')
+
+        self.humidity = humidity / 10.0
+        self.temperature = temperature / 10.0
+
+    def temperature(self):
+        return self.temperature
+
+    def humidity(self):
+        return self.humidity
+
+class DHT11(DHT):
+    def __init__(self, pin):
+        super().__init__(pin)
+
+class DHT22(DHT):
+    def __init__(self, pin):
+        super().__init__(pin)
+        self.temperature_scale = -1 if self.temperature < 0 else 1
+        self.temperature = self.temperature * self.temperature_scale

@@ -11,7 +11,7 @@ Arduino â†’ Python â†’ Matplotlib â†’ Thingspeak**
 
 ------------------------------------------------------------------------
 
-## ðŸ“¦ Project Contents
+##  Project Contents
 
 ### `arduino/mq2_monitor.ino`
 
@@ -32,7 +32,7 @@ Arduino â†’ Python â†’ Matplotlib â†’ Thingspeak**
 
 ------------------------------------------------------------------------
 
-## ðŸ”Œ System Architecture
+## System Architecture
 
   -----------------------------------------------------------------------
   Component                                 Description
@@ -49,7 +49,7 @@ Arduino â†’ Python â†’ Matplotlib â†’ Thingspeak**
 
 ------------------------------------------------------------------------
 
-## â–¶ï¸ How to Run
+## How to Run
 
 ### **1. Arduino**
 
@@ -65,7 +65,7 @@ pip install pyserial requests matplotlib
 
 ------------------------------------------------------------------------
 
-## ðŸ§© Source Code
+## Source Code
 
 ### **Arduino -- mq2_monitor.ino**
 
@@ -153,7 +153,7 @@ while True:
 
 ------------------------------------------------------------------------
 
-## ðŸŽ¥ Demo Video
+##  Demo Video
 
 YouTube Short:
 https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf

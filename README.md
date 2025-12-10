@@ -1,6 +1,6 @@
 # ArduPys -- Microcontroller Monitoring & Control Platform
 
-*Lightweight â€¢ Functional â€¢ Industrial-Ready*
+*Lightweight Functional Industrial-Ready*
 
 ArduPys is a lightweight development platform that integrates **Arduino
 / ESP32 microcontrollers** with **Python** to provide simple yet

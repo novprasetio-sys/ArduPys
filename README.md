@@ -1,56 +1,75 @@
-# ArduPys – Microcontroller Monitoring & Control Platform  
-*Lightweight • Functional • Industrial-Ready*
+# ArduPys -- Microcontroller Monitoring & Control Platform
 
-ArduPys adalah platform pengembangan microcontroller (Arduino / ESP32)  
-yang terintegrasi dengan Python untuk monitoring dan kontrol industri ringan.
+*Lightweight â€¢ Functional â€¢ Industrial-Ready*
 
-Repositori ini berisi integrasi:  
-**Sensor MQ-2 → Arduino → Python → Matplotlib → Thingspeak**
+ArduPys is a lightweight development platform that integrates **Arduino
+/ ESP32 microcontrollers** with **Python** to provide simple yet
+effective monitoring and control for light industrial applications.
 
----
+This repository contains a complete example flow: **MQ-2 Sensor â†’
+Arduino â†’ Python â†’ Matplotlib â†’ Thingspeak**
 
-## 📦 Isi Project
+------------------------------------------------------------------------
+
+## ðŸ“¦ Project Contents
 
 ### `arduino/mq2_monitor.ino`
-- Membaca nilai analog dari sensor MQ-2  
-- Mengirim data ke PC melalui Serial (9600 baud)  
-- Format data: angka murni, tanpa teks tambahan  
+
+-   Reads analog values from the MQ-2 gas sensor
+-   Sends raw numeric data via Serial (9600 baud)
+-   Output format: pure integer data (no extra text)
 
 ### `python/ardupys_gateway.py`
-- Membaca nilai sensor dari Serial (PySerial)  
-- Menampilkan grafik real-time menggunakan Matplotlib  
-- Mengirim data ke Thingspeak setiap 15 detik  
+
+-   Reads sensor data from Serial using PySerial
+-   Displays real-time graph using Matplotlib
+-   Uploads data to Thingspeak every 15 seconds
 
 ### `docs/`
-- Dokumentasi wiring  
-- Foto rangkaian atau hasil pengujian  
 
----
+-   Wiring documentation
+-   Test photos or hardware setup images
 
-## 🔌 Arsitektur Sistem
+------------------------------------------------------------------------
 
-| Komponen         | Fungsi / Keterangan |
-|-----------------|-------------------|
-| Arduino / ESP32  | Membaca sensor MQ-2 dan kirim data Serial |
-| Python Gateway   | Menerima data Serial, plot grafik realtime |
-| Thingspeak       | Menyimpan data dan menampilkan chart online |
+## ðŸ”Œ System Architecture
 
----
+  -----------------------------------------------------------------------
+  Component                                 Description
+  ----------------------------------------- -----------------------------
+  Arduino / ESP32                           Reads MQ-2 sensor and streams
+                                            Serial data
 
-## ▶️ Cara Menjalankan
+  Python Gateway                            Receives Serial data and
+                                            displays real-time graph
 
-### 1. Arduino
-Upload `mq2_monitor.ino` ke board (UNO / Nano / ESP32).
+  Thingspeak                                Stores and visualizes cloud
+                                            data
+  -----------------------------------------------------------------------
 
-### 2. Python
-Install dependency:  
+------------------------------------------------------------------------
 
-```bash
+## â–¶ï¸ How to Run
+
+### **1. Arduino**
+
+Upload `mq2_monitor.ino` to your board (UNO / Nano / ESP32).
+
+### **2. Python**
+
+Install the required dependencies:
+
+``` bash
 pip install pyserial requests matplotlib
+```
 
+------------------------------------------------------------------------
 
-// Arduino C code — mq2_monitor.ino
+## ðŸ§© Source Code
 
+### **Arduino -- mq2_monitor.ino**
+
+``` cpp
 const int MQ2_PIN = A0;
 
 void setup() {
@@ -59,18 +78,22 @@ void setup() {
 
 void loop() {
   int gasValue = analogRead(MQ2_PIN);
-  Serial.println(gasValue); // kirim angka murni
+  Serial.println(gasValue); // send raw integer
   delay(200);
 }
+```
 
-# Python code — ardupys_gateway.py
+------------------------------------------------------------------------
 
+### **Python -- ardupys_gateway.py**
+
+``` python
 import serial
 import time
 import requests
 import matplotlib.pyplot as plt
 
-SERIAL_PORT = "COM6"   # ubah sesuai port kamu
+SERIAL_PORT = "COM6"   # change to your serial port
 BAUD = 9600
 
 API_KEY = "YOUR_API_KEY"
@@ -84,7 +107,7 @@ plt.ion()
 fig, ax = plt.subplots()
 xs, ys = [], []
 line, = ax.plot(xs, ys)
-ax.set_title("ArduPys – MQ2 Realtime Monitoring")
+ax.set_title("ArduPys â€“ MQ2 Realtime Monitoring")
 ax.set_xlabel("Sample")
 ax.set_ylabel("MQ2 Value")
 
@@ -95,9 +118,9 @@ sample = 0
 def upload(value):
     try:
         requests.get(TS_URL, params={"api_key": API_KEY, "field1": value})
-        print(f"Kirim Thingspeak: {value}")
+        print(f"Sent to Thingspeak: {value}")
     except:
-        print("Gagal upload Thingspeak")
+        print("Upload failed")
 
 while True:
     raw = ser.readline().decode().strip()
@@ -126,8 +149,11 @@ while True:
     if time.time() - last_upload >= 15:
         upload(last_value)
         last_upload = time.time()
+```
 
+------------------------------------------------------------------------
 
-# link vidio demo
+## ðŸŽ¥ Demo Video
 
+YouTube Short:
 https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf

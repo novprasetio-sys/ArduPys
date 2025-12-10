@@ -6,8 +6,8 @@ ArduPys is a lightweight development platform that integrates **Arduino
 / ESP32 microcontrollers** with **Python** to provide simple yet
 effective monitoring and control for light industrial applications.
 
-This repository contains a complete example flow: **MQ-2 Sensor â†’
-Arduino â†’ Python â†’ Matplotlib â†’ Thingspeak**
+This repository contains a complete example flow: **MQ-2 Sensor >>
+Arduino >> Python >> Matplotlib >> Thingspeak**
 
 ------------------------------------------------------------------------
 

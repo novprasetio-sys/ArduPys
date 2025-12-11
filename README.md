@@ -1,159 +1,147 @@
-# ArduPys -- Microcontroller Monitoring & Control Platform
 
-*Lightweight Functional Industrial-Ready*
+## ArduPys Sensor GUI
 
-ArduPys is a lightweight development platform that integrates **Arduino
-/ ESP32 microcontrollers** with **Python** to provide simple yet
-effective monitoring and control for light industrial applications.
+GUI sederhana untuk membaca data sensor suhu dari serial (Arduino / microcontroller) dan menampilkannya dalam bentuk LCD digital serta grafik real-time.Pada setup ini hardware yang digunakan adalah DS18b20 dan Arduino Uno, yang mana pin data Dallas terhubung ke pin 3 Arduino.Dan koding Arduino yg digunakan adalah simple.ino yg terdapat pada library bawaan Dallas Temperatur
 
-This repository contains a complete example flow: **MQ-2 Sensor >>
-Arduino >> Python >> Matplotlib >> Thingspeak**
+---
 
-------------------------------------------------------------------------
+## Fitur
+- Membaca data suhu dari serial (COM3)
+- Menampilkan angka suhu (LCD style)
+- Grafik real-time menggunakan Matplotlib
+- Update otomatis setiap 100 ms
 
-##  Project Contents
+---
 
-### `arduino/mq2_monitor.ino`
-
--   Reads analog values from the MQ-2 gas sensor
--   Sends raw numeric data via Serial (9600 baud)
--   Output format: pure integer data (no extra text)
-
-### `python/ardupys_gateway.py`
-
--   Reads sensor data from Serial using PySerial
--   Displays real-time graph using Matplotlib
--   Uploads data to Thingspeak every 15 seconds
-
-### `docs/`
-
--   Wiring documentation
--   Test photos or hardware setup images
-
-------------------------------------------------------------------------
-
-## System Architecture
-
-  -----------------------------------------------------------------------
-  Component                                 Description
-  ----------------------------------------- -----------------------------
-  Arduino / ESP32                           Reads MQ-2 sensor and streams
-                                            Serial data
-
-  Python Gateway                            Receives Serial data and
-                                            displays real-time graph
-
-  Thingspeak                                Stores and visualizes cloud
-                                            data
-  -----------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-## How to Run
-
-### **1. Arduino**
-
-Upload `mq2_monitor.ino` to your board (UNO / Nano / ESP32).
-
-### **2. Python**
-
-Install the required dependencies:
-
-``` bash
-pip install pyserial requests matplotlib
-```
-
-------------------------------------------------------------------------
-
-## Source Code
-
-### **Arduino -- mq2_monitor.ino**
-
-``` cpp
-const int MQ2_PIN = A0;
-
-void setup() {
-  Serial.begin(9600);
-}
-
-void loop() {
-  int gasValue = analogRead(MQ2_PIN);
-  Serial.println(gasValue); // send raw integer
-  delay(200);
-}
-```
-
-------------------------------------------------------------------------
-
-### **Python -- ardupys_gateway.py**
-
-``` python
+## Kode Lengkap
+```python
+import tkinter as tk
+from tkinter import ttk
 import serial
-import time
-import requests
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
 
-SERIAL_PORT = "COM6"   # change to your serial port
-BAUD = 9600
+class SensorGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sensor GUI")
+        self.serial_port = serial.Serial('COM3', 9600, timeout=1)
 
-API_KEY = "YOUR_API_KEY"
-TS_URL = "https://api.thingspeak.com/update"
+        self.temperature_values = []
+        self.time_values = []
 
-ser = serial.Serial(SERIAL_PORT, BAUD, timeout=1)
-time.sleep(2)
+        self.create_widgets()
 
-# Matplotlib init
-plt.ion()
-fig, ax = plt.subplots()
-xs, ys = [], []
-line, = ax.plot(xs, ys)
-ax.set_title("ArduPys â€“ MQ2 Realtime Monitoring")
-ax.set_xlabel("Sample")
-ax.set_ylabel("MQ2 Value")
+    def create_widgets(self):
+        self.lcd_frame = tk.Frame(self.root, bg="black", width=400, height=200)
+        self.lcd_frame.pack()
 
-last_upload = time.time()
-last_value = None
-sample = 0
+        self.temperature_label = tk.Label(
+            self.lcd_frame,
+            text="Temperature: ",
+            font=("Arial", 40),
+            bg="black",
+            fg="green"
+        )
+        self.temperature_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-def upload(value):
-    try:
-        requests.get(TS_URL, params={"api_key": API_KEY, "field1": value})
-        print(f"Sent to Thingspeak: {value}")
-    except:
-        print("Upload failed")
+        self.graph_frame = tk.Frame(self.root)
+        self.graph_frame.pack()
 
-while True:
-    raw = ser.readline().decode().strip()
-    if raw == "":
-        continue
+        self.figure = Figure(figsize=(5, 4), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title('Temperature Graph')
+        self.ax.set_xlabel('Time')
+        self.ax.set_ylabel('Temperature (°C)')
 
-    try:
-        last_value = int(raw)
-        print("MQ2:", last_value)
-    except:
-        print("Invalid:", raw)
-        continue
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.graph_frame)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack()
 
-    # --- LIVE GRAPH ---
-    sample += 1
-    xs.append(sample)
-    ys.append(last_value)
-    line.set_xdata(xs)
-    line.set_ydata(ys)
-    ax.relim()
-    ax.autoscale_view()
-    plt.draw()
-    plt.pause(0.001)
+        self.update_temperature()
 
-    # --- Thingspeak Upload ---
-    if time.time() - last_upload >= 15:
-        upload(last_value)
-        last_upload = time.time()
-```
+    def update_temperature(self):
+        data = self.serial_port.readline().decode('utf-8').strip()
+        if data:
+            try:
+                temperature = float(data)
+                print(temperature)
+                self.temperature_values.append(temperature)
+                self.time_values.append(len(self.time_values))
 
-------------------------------------------------------------------------
+                self.temperature_label.config(text=f"{temperature} °C")
 
-##  Demo Video
+                self.ax.clear()
+                self.ax.plot(self.time_values, self.temperature_values)
+                self.ax.set_title('Temperature Graph')
+                self.ax.set_xlabel('Time')
+                self.ax.set_ylabel('Temperature (°C)')
+                self.ax.set_ylim(min(self.temperature_values) - 1,
+                                 max(self.temperature_values) + 1)
 
-YouTube Short:
-https://youtube.com/shorts/Ehjf90_C43w?si=IwztdDMWZYw2OwVf
+                self.canvas.draw()
+            except ValueError:
+                pass
+
+        self.root.after(100, self.update_temperature)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.geometry("800x600")
+    app = SensorGUI(root)
+    root.mainloop()
+
+Arduino Codes menggunakan template Dallas Temperatur dengan file simple.ino
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 3
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+/*
+ * The setup function. We only start the sensors here
+ */
+void setup(void)
+{
+  // start serial port
+  Serial.begin(9600);
+  //Serial.println("Dallas Temperature IC Control Library Demo");
+
+  // Start up the library
+  sensors.begin();
+}
+
+/*
+ * Main function, get and show the temperature
+ */
+void loop(void)
+{ 
+  // call sensors.requestTemperatures() to issue a global temperature 
+  // request to all devices on the bus
+  //Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  //Serial.println("DONE");
+  // After we got the temperatures, we can print them here.
+  // We use the function ByIndex, and as an example get the temperature from the first sensor only.
+  float tempC = sensors.getTempCByIndex(0);
+
+  // Check if reading was successful
+  if(tempC != DEVICE_DISCONNECTED_C) 
+  {
+    //Serial.print("Temperature for the device 1 (index 0) is: ");
+    Serial.println(tempC);
+  } 
+  else
+  {
+    Serial.println("Error: Could not read temperature data");
+  }
+}

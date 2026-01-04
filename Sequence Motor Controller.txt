@@ -1,0 +1,59 @@
+#define LUBE_MOTOR 8
+#define DRILL_MOTOR 9
+
+#define BTN_START 2
+#define BTN_STOP  3
+
+unsigned long tStart = 0;
+
+enum {
+  IDLE,
+  LUBE_RUNNING,
+  DRILL_RUNNING
+} state;
+
+void setup() {
+  pinMode(LUBE_MOTOR, OUTPUT);
+  pinMode(DRILL_MOTOR, OUTPUT);
+
+  pinMode(BTN_START, INPUT_PULLUP);
+  pinMode(BTN_STOP, INPUT_PULLUP);
+
+  state = IDLE;
+}
+
+void loop() {
+
+  // STOP selalu prioritas
+  if (digitalRead(BTN_STOP) == LOW) {
+    digitalWrite(LUBE_MOTOR, LOW);
+    digitalWrite(DRILL_MOTOR, LOW);
+    state = IDLE;
+  }
+
+  switch (state) {
+
+    case IDLE:
+      if (digitalRead(BTN_START) == LOW) {
+        digitalWrite(LUBE_MOTOR, HIGH);
+        tStart = millis();
+        state = LUBE_RUNNING;
+      }
+      break;
+
+    case LUBE_RUNNING:
+      if (millis() - tStart >= 3000) {
+        digitalWrite(DRILL_MOTOR, HIGH);
+        state = DRILL_RUNNING;
+      }
+      break;
+
+    case DRILL_RUNNING:
+      // motor jalan normal
+      break;
+  }
+}
+
+// notes
+// kode ini cocok dipakai untuk kontroller mesin drill
+//dengan catatan tetap gunakan logic overload secara eksternal ke A1/A2 kontaktor

@@ -1,0 +1,45 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS 2
+#define RELAY_PIN 3
+
+float temperatureC = 0.0;
+float threshold = 30.0;
+
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);  // Relay OFF awal
+  
+  sensors.begin();
+  
+  Serial.println("Simulasi Kontrol Suhu + Relay");
+}
+
+void loop() {
+  
+  sensors.requestTemperatures();
+  temperatureC = sensors.getTempCByIndex(0);
+  
+  Serial.print("Suhu: ");
+  Serial.print(temperatureC);
+  Serial.println(" °C");
+  
+  if (temperatureC > threshold) {
+    digitalWrite(RELAY_PIN, HIGH);   // Relay ON
+    Serial.println("Relay ON (Suhu di atas 30C)");
+  } 
+  else {
+    digitalWrite(RELAY_PIN, LOW);    // Relay OFF
+    Serial.println("Relay OFF (Suhu normal)");
+  }
+  
+  Serial.println("------------------------");
+  
+  delay(1000);
+}

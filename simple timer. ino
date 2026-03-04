@@ -1,0 +1,139 @@
+
+// #include <Wire.h>
+// #include <LiquidCrystal_I2C.h>
+
+// LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+const int switch1 = 2;
+const int switch2 = 3;
+const int switch3 = 4;
+const int switch4 = 5;
+const int output1 = 6;
+const int output2 = 7;
+
+unsigned long timer1 = 0;
+unsigned long timer2 = 0;
+unsigned long timer3 = 0;
+unsigned long timer4 = 0;
+
+bool state1 = false;
+bool state2 = false;
+bool state3 = false;
+bool state4 = false;
+
+bool error = false;
+
+void setup() {
+  pinMode(switch1, INPUT_PULLUP);
+  pinMode(switch2, INPUT_PULLUP);
+  pinMode(switch3, INPUT_PULLUP);
+  pinMode(switch4, INPUT_PULLUP);
+  pinMode(output1, OUTPUT);
+  pinMode(output2, OUTPUT);
+
+  // lcd.begin();
+  // lcd.backlight();
+  // lcd.print("Sistem Timer Pakan");
+  // lcd.setCursor(0, 1);
+  // lcd.print("Ikan Otomatis");
+  // delay(2000);
+  // lcd.clear();
+}
+
+void loop() {
+  int switchCount = 0;
+  if (digitalRead(switch1) == LOW) switchCount++;
+  if (digitalRead(switch2) == LOW) switchCount++;
+  if (digitalRead(switch3) == LOW) switchCount++;
+  if (digitalRead(switch4) == LOW) switchCount++;
+
+  if (switchCount > 1) {
+    error = true;
+    // lcd.clear();
+    // lcd.print("Error: Multiple");
+    // lcd.setCursor(0, 1);
+    // lcd.print("Switch Active");
+  } else {
+    error = false;
+  }
+
+  if (digitalRead(switch1) == LOW && !state1 && !error) {
+    state1 = true;
+    timer1 = millis();
+  }
+
+  if (digitalRead(switch2) == LOW && !state2 && !error) {
+    state2 = true;
+    timer2 = millis();
+  }
+
+  if (digitalRead(switch3) == LOW && !state3 && !error) {
+    state3 = true;
+    timer3 = millis();
+  }
+
+  if (digitalRead(switch4) == LOW && !state4 && !error) {
+    state4 = true;
+    timer4 = millis();
+  }
+
+  if (state1) {
+    if (millis() - timer1 < 2000) {
+      digitalWrite(output1, HIGH);
+      digitalWrite(output2, HIGH);
+    } else if (millis() - timer1 < 7000) {
+      digitalWrite(output1, LOW);
+      digitalWrite(output2, LOW);
+    } else {
+      state1 = false;
+    }
+  }
+
+  if (state2) {
+    if (millis() - timer2 < 2000) {
+      digitalWrite(output1, HIGH);
+      digitalWrite(output2, HIGH);
+    } else if (millis() - timer2 < 9000) {
+      digitalWrite(output1, LOW);
+      digitalWrite(output2, LOW);
+    } else {
+      state2 = false;
+    }
+  }
+
+  if (state3) {
+    if (millis() - timer3 < 2000) {
+      digitalWrite(output1, HIGH);
+      digitalWrite(output2, HIGH);
+    } else if (millis() - timer3 < 10000) {
+      digitalWrite(output1, LOW);
+      digitalWrite(output2, LOW);
+    } else {
+      state3 = false;
+    }
+  }
+
+  if (state4) {
+    if (millis() - timer4 < 2000) {
+      digitalWrite(output1, HIGH);
+      digitalWrite(output2, HIGH);
+    } else if (millis() - timer4 < 12000) {
+      digitalWrite(output1, LOW);
+      digitalWrite(output2, LOW);
+    } else {
+      state4 = false;
+    }
+  }
+
+  // lcd.setCursor(0, 0);
+  // lcd.print("S1:");
+  // lcd.print(state1);
+  // lcd.print(" S2:");
+  // lcd.print(state2);
+  // lcd.setCursor(0, 1);
+  // lcd.print("S3:");
+  // lcd.print(state3);
+  // lcd.print(" S4:");
+  // lcd.print(state4);
+  delay(100);
+}

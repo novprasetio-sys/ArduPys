@@ -1,0 +1,84 @@
+// arduino codes
+const int pinKincir[] = {2, 13, 4, 5, 6, 7, 8, 9};
+
+void setup() {
+  Serial.begin(9600);
+  for (int i = 0; i < 8; i++) {
+    pinMode(pinKincir[i], OUTPUT);
+    digitalWrite(pinKincir[i], LOW);
+  }
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String data = Serial.readStringUntil('\n');
+    int pin = data.substring(0, 1).toInt() - 1;
+    char status = data.substring(1, 2).charAt(0);
+    if (status == 'H') {
+      digitalWrite(pinKincir[pin], HIGH);
+    } else if (status == 'L') {
+      digitalWrite(pinKincir[pin], LOW);
+    }
+  }
+}
+
+# python codes
+import tkinter as tk
+import serial
+
+class ArduPysGUI:
+    def __init__(self):
+        self.window = tk.Tk()
+        self.window.title("ArduPys GUI")
+        self.window.geometry("400x350")
+        self.serial_port = None
+        self.kincir_status = [False] * 6
+        self.kincir_buttons = []
+        self.status_label = tk.Label(self.window, text="Status: Not Connected")
+        self.status_label.pack()
+
+        self.connect_button = tk.Button(self.window, text="Connect", command=self.connect_serial)
+        self.connect_button.pack()
+
+        self.kincir_frame = tk.Frame(self.window)
+        self.kincir_frame.pack()
+
+        for i in range(6):
+            button = tk.Button(self.kincir_frame, text=f"Kontaktor {i+1}", command=lambda i=i: self.kincir_button_click(i), height=3, width=15)
+            button.pack()
+            self.kincir_buttons.append(button)
+            self.kincir_buttons[i].config(state="disabled")
+
+    def connect_serial(self):
+        try:
+            self.serial_port = serial.Serial("COM3", 9600) # samakan com dengan arduino
+            self.status_label.config(text="Status: Connected")
+            self.connect_button.config(text="Disconnect", command=self.disconnect_serial)
+            for button in self.kincir_buttons:
+                button.config(state="normal")
+        except serial.SerialException:
+            self.status_label.config(text="Status: Connection Failed")
+
+    def disconnect_serial(self):
+        self.serial_port.close()
+        self.serial_port = None
+        self.status_label.config(text="Status: Not Connected")
+        self.connect_button.config(text="Connect", command=self.connect_serial)
+        for button in self.kincir_buttons:
+            button.config(state="disabled")
+
+    def kincir_button_click(self, i):
+        self.kincir_status[i] = not self.kincir_status[i]
+        if self.kincir_status[i]:
+            self.kincir_buttons[i].config(relief="sunken", bg="green")
+            self.serial_port.write(f"{i+1}H\n".encode())
+        else:
+            self.kincir_buttons[i].config(relief="raised", bg="SystemButtonFace")
+            self.serial_port.write(f"{i+1}L\n".encode())
+
+    def run(self):
+        self.window.mainloop()
+
+if __name__ == "__main__":
+    gui = ArduPysGUI()
+    gui.run()

@@ -1,0 +1,88 @@
+// setup ini cocok untuk pengembangan monitoring alarm kerusakan mesin denga  metode ArduPys
+// Arduino dari sisi hardware hanya membaca status mesin saja
+// Python Progam yg bertugas mengirim notice ke telegram dan komputer sebagai device hardwarenya
+
+
+// Arduino Code
+
+int kontak = 2;
+int lastState = HIGH;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(kontak, INPUT_PULLUP);
+}
+
+void loop() {
+
+  int state = digitalRead(kontak);
+
+  if(state != lastState){
+
+    if(state == LOW){
+      Serial.println("MESIN_HIDUP");
+    }
+
+    if(state == HIGH){
+      Serial.println("MESIN_MATI");
+    }
+
+
+    lastState = state;
+  }
+
+  delay(100);
+}
+
+
+# python codes
+
+import serial
+import requests
+
+# ======================
+# KONFIGURASI
+# ======================
+
+PORT = "COM3"      # ganti sesuai port Arduino
+BAUD = 9600
+
+BOT_TOKEN = "ISI_TOKEN_BOT"
+CHAT_ID = "ISI_CHAT_ID"
+
+# ======================
+
+ser = serial.Serial(PORT, BAUD)
+
+print("Monitoring Mesin Aktif...")
+
+while True:
+
+    data = ser.readline().decode().strip()
+
+    if data == "MESIN_HIDUP":
+
+        pesan = "Mesin dalam kondisi HIDUP"
+
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+        requests.post(url, data={
+            "chat_id": CHAT_ID,
+            "text": pesan
+        })
+
+        print(pesan)
+
+
+    if data == "MESIN_MATI":
+
+        pesan = "Mesin dalam kondisi MATI"
+
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+        requests.post(url, data={
+            "chat_id": CHAT_ID,
+            "text": pesan
+        })
+
+        print(pesan)

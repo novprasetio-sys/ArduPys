@@ -1,0 +1,127 @@
+// c++ codes
+
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+
+void setup() {
+  Serial.begin(9600);
+  servo1.attach(3);
+  servo2.attach(5);
+  servo3.attach(6);
+}
+
+void loop() {
+  if (Serial.available()) {
+    String data = Serial.readStringUntil('\n');
+
+    int p1, p2, p3;
+    sscanf(data.c_str(), "%d,%d,%d", &p1, &p2, &p3);
+
+    servo1.write(constrain(p1, 0, 180));
+    servo2.write(constrain(p2, 0, 180));
+    servo3.write(constrain(p3, 0, 180));
+  }
+}
+
+
+# python GUI Codes
+
+import tkinter as tk
+import serial
+
+# ======================
+# KONFIGURASI
+# ======================
+PORT = "COM4"
+BAUD = 9600
+
+ser = serial.Serial(PORT, BAUD)
+
+# ======================
+# VARIABEL GLOBAL
+# ======================
+s1 = 90
+s2 = 90
+s3 = 90
+
+# ======================
+# KIRIM DATA
+# ======================
+def kirim():
+    data = f"{s1},{s2},{s3}\n"
+    ser.write(data.encode())
+
+# ======================
+# CALLBACK SLIDER
+# ======================
+def update_s1(val):
+    global s1
+    s1 = int(val)
+    label_s1.config(text=f"Servo 1: {s1}")
+    kirim()
+
+def update_s2(val):
+    global s2
+    s2 = int(val)
+    label_s2.config(text=f"Servo 2: {s2}")
+    kirim()
+
+def update_s3(val):
+    global s3
+    s3 = int(val)
+    label_s3.config(text=f"Servo 3: {s3}")
+    kirim()
+
+# ======================
+# GUI
+# ======================
+root = tk.Tk()
+root.title("Robot Arm Manual Control")
+root.geometry("400x400")
+
+# ===== Servo 1 =====
+label_s1 = tk.Label(root, text="Servo 1: 90", font=("Arial", 12))
+label_s1.pack()
+
+slider1 = tk.Scale(root,
+                   from_=0,
+                   to=180,
+                   orient="horizontal",
+                   length=300,
+                   width=25,
+                   command=update_s1)
+slider1.set(90)
+slider1.pack(pady=10)
+
+# ===== Servo 2 =====
+label_s2 = tk.Label(root, text="Servo 2: 90", font=("Arial", 12))
+label_s2.pack()
+
+slider2 = tk.Scale(root,
+                   from_=0,
+                   to=180,
+                   orient="horizontal",
+                   length=300,
+                   width=25,
+                   command=update_s2)
+slider2.set(90)
+slider2.pack(pady=10)
+
+# ===== Servo 3 =====
+label_s3 = tk.Label(root, text="Servo 3: 90", font=("Arial", 12))
+label_s3.pack()
+
+slider3 = tk.Scale(root,
+                   from_=0,
+                   to=180,
+                   orient="horizontal",
+                   length=300,
+                   width=25,
+                   command=update_s3)
+slider3.set(90)
+slider3.pack(pady=10)
+
+root.mainloop()

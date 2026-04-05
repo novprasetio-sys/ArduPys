@@ -1,0 +1,237 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <LittleFS.h>
+
+ESP8266WebServer server(80);
+
+const char* ssid = "TPR_1";
+const char* password = "12345678";
+
+// ===== STATUS =====
+String getStatus(float arus) {
+  if (arus <= 1.3) return "NORMAL";
+  else if (arus <= 1.4) return "THRESHOLD";
+  else return "OVERHEAT";
+}
+
+// ===== HALAMAN KOLOM =====
+String halamanKolam(String kolam) {
+
+  String html = R"====(
+  <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { font-family: Arial; text-align: center; }
+      input { width: 70px; margin: 4px; }
+      button { padding: 8px; margin: 5px; }
+    </style>
+  </head>
+  <body>
+
+  <h3>Kolam KOLAM</h3>
+
+  Tanggal:<br>
+  <input type="text" id="tanggal"><br><br>
+  )====";
+
+  for (int i = 1; i <= 10; i++) {
+    html += "Kincir " + String(i) +
+            ": <input type='number' step='0.1' id='k" + String(i) + "' oninput='cek(this)'><br>";
+  }
+
+  html += R"====(
+
+  <br>
+  <button onclick="save()">Simpan</button>
+  <button onclick="downloadFile()">Download CSV</button>
+  <button onclick="back()">Kembali</button>
+
+  <p>🔵 Normal | 🟡 Threshold | 🔴 Overheat</p>
+
+<script>
+
+let warned = false;
+
+// AUTO TANGGAL
+let t = new Date();
+let y = t.getFullYear();
+let m = String(t.getMonth()+1).padStart(2,'0');
+let d = String(t.getDate()).padStart(2,'0');
+document.getElementById("tanggal").value = y+m+d;
+
+// CEK WARNA
+function cek(el){
+  let v = parseFloat(el.value);
+
+  if(isNaN(v)){
+    el.style.backgroundColor = "white";
+    return;
+  }
+
+  if(v <= 1.3){
+    el.style.backgroundColor = "#add8e6";
+  }
+  else if(v <= 1.4){
+    el.style.backgroundColor = "yellow";
+  }
+  else{
+    el.style.backgroundColor = "red";
+    if(!warned){
+      alert("⚠️ Potentially Overheat!");
+      warned = true;
+    }
+  }
+}
+
+// SAVE DATA
+function save(){
+  let tanggal = document.getElementById("tanggal").value;
+
+  if(!tanggal){
+    alert("Isi tanggal dulu!");
+    return;
+  }
+
+  let data = "KOLAM," + tanggal;
+
+  for(let i=1;i<=10;i++){
+    let val = document.getElementById("k"+i).value;
+    data += "," + val;
+  }
+
+  fetch("/save?data=" + data)
+    .then(res=>res.text())
+    .then(res=>alert("✅ "+res));
+}
+
+// DOWNLOAD CSV
+function downloadFile(){
+  let tanggal = document.getElementById("tanggal").value;
+
+  if(!tanggal){
+    alert("Isi tanggal dulu!");
+    return;
+  }
+
+  let file = "KOLAM_" + tanggal + ".csv";
+  file = file.toLowerCase();
+
+  window.open("/download?file=" + file);
+}
+
+// BACK
+function back(){
+  window.location.href = "/";
+}
+
+</script>
+
+</body>
+</html>
+)====";
+
+  html.replace("KOLAM", kolam);
+  return html;
+}
+
+// ===== MENU =====
+void handleMenu(){
+  String html = R"====(
+  <h3>Pilih Kolam</h3>
+  <a href="/a1"><button>A1</button></a>
+  <a href="/a2"><button>A2</button></a>
+  <a href="/a3"><button>A3</button></a>
+  <a href="/a4"><button>A4</button></a>
+  )====";
+
+  server.send(200,"text/html",html);
+}
+
+// ===== SAVE =====
+void handleSave(){
+  String data = server.arg("data");
+
+  int idx1 = data.indexOf(',');
+  int idx2 = data.indexOf(',', idx1+1);
+
+  String kolam = data.substring(0, idx1);
+  String tanggal = data.substring(idx1+1, idx2);
+
+  kolam.toLowerCase();
+
+  String filename = "/" + kolam + "_" + tanggal + ".csv";
+
+  File file;
+
+  if(!LittleFS.exists(filename)){
+    file = LittleFS.open(filename,"w");
+    file.println("tanggal,kincir,arus,status");
+  } else {
+    file = LittleFS.open(filename,"a");
+  }
+
+  int start = idx2+1;
+  int k = 1;
+
+  while(start < data.length()){
+    int next = data.indexOf(',', start);
+    if(next == -1) next = data.length();
+
+    float arus = data.substring(start, next).toFloat();
+
+    if(arus > 0){
+      file.println(tanggal + "," + String(k) + "," + String(arus) + "," + getStatus(arus));
+    }
+
+    start = next+1;
+    k++;
+  }
+
+  file.close();
+
+  server.send(200,"text/plain","Tersimpan: "+filename);
+}
+
+// ===== DOWNLOAD =====
+void handleDownload() {
+  if (!server.hasArg("file")) {
+    server.send(400, "text/plain", "File?");
+    return;
+  }
+
+  String filename = "/" + server.arg("file");
+
+  if (!LittleFS.exists(filename)) {
+    server.send(404, "text/plain", "File tidak ada");
+    return;
+  }
+
+  File file = LittleFS.open(filename, "r");
+  server.streamFile(file, "text/csv");
+  file.close();
+}
+
+// ===== SETUP =====
+void setup(){
+  Serial.begin(115200);
+
+  WiFi.softAP(ssid,password);
+  LittleFS.begin();
+
+  server.on("/", handleMenu);
+  server.on("/a1", [](){ server.send(200,"text/html",halamanKolam("A1")); });
+  server.on("/a2", [](){ server.send(200,"text/html",halamanKolam("A2")); });
+  server.on("/a3", [](){ server.send(200,"text/html",halamanKolam("A3")); });
+  server.on("/a4", [](){ server.send(200,"text/html",halamanKolam("A4")); });
+
+  server.on("/save", handleSave);
+  server.on("/download", handleDownload);
+
+  server.begin();
+}
+
+// ===== LOOP =====
+void loop(){
+  server.handleClient();
+}
